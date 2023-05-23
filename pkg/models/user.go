@@ -11,6 +11,7 @@ type User struct {
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
+	Username  string `json:"username"`
 }
 
 func init() {
@@ -39,6 +40,11 @@ func GetUserById(Id int64) (*User, *gorm.DB) {
 func GetUserByEmail(email string) (*User, *gorm.DB) {
 	var getUser User
 	db := db.Where("email=?", email).Find(&getUser)
+	return &getUser, db
+}
+func GetUserByUserName(username string) (*User, *gorm.DB) {
+	var getUser User
+	db := db.Where("username=?", username).Find(&getUser)
 	return &getUser, db
 }
 func DeleteUser(ID int64) User {

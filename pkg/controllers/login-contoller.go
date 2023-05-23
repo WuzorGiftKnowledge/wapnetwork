@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-
+	"golang.org/x/crypto/bcrypt"
 	"github.com/WuzorGiftKnowledge/bookapp/pkg/auth"
 	"github.com/WuzorGiftKnowledge/bookapp/pkg/models"
 	"github.com/WuzorGiftKnowledge/bookapp/pkg/utils"
@@ -13,19 +13,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	loginRequest := &models.LoginRequest{}
 
 	utils.ParseBody(r, loginRequest)
-	user, db := models.GetUserByEmail(loginRequest.Email)
+	user, db := models.GetUserByUserName(loginRequest.UserName)
 	if db.Error != nil || user == nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("incorrect username"))
 		return
 	}
-	if user.Password != loginRequest.Password {
+	 if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("invalid credentials"))
 		return
 	}
 
-	accessToken, refreshToken, err := auth.GenerateJWTToken(user.Email, int64(user.ID))
+	accessToken, refreshToken, err := auth.GenerateJWTToken(user.Username, int64(user.ID))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("error generating token " + err.Error()))
@@ -63,3 +63,4 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 
 }
+

@@ -113,11 +113,7 @@ func RefreshToken(refreshToken string) (accessToken string, rt string, err error
 
 		if ok && claims["current_user_id"] != nil {
 			userid :=claims["current_user_id"].(float64)
-			// userid, errr :=strconv.Atoi(useridString)
-			// if errr != nil {
-			// 	err = fmt.Errorf("invalid user info in token")
-			// 	return
-			// }
+			
 			user, db := models.GetUserById(int64(userid))
 			if db.Error != nil {
 				err = fmt.Errorf("user not found")
