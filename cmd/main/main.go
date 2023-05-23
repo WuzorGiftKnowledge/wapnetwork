@@ -1,16 +1,32 @@
 package main
 
-import(
+import (
 	"log"
 	"net/http"
+
+	"github.com/WuzorGiftKnowledge/bookapp/pkg/auth"
+	"github.com/WuzorGiftKnowledge/bookapp/pkg/routes"
+
 	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/akhil/go-bookstore/pkg/routes"
+	"github.com/spf13/viper"
 )
 
-func main(){
+
+func main() {
+	viper.SetConfigFile(".env")
+
+
 	r := mux.NewRouter()
-	routes.RegisterBookStoreRoutes(r)
+	
+	authrouter := r.PathPrefix("/api/auth").Subrouter()
+	routes.RegisterAuthRoutes(authrouter)
+	
+	apirouter := r.PathPrefix("/api").Subrouter()
+	routes.RegisterBookStoreRoutes(apirouter)
+	routes.RegisterUserRoutes(apirouter)
+	apirouter.Use(auth.AuthMiddleware)
+	
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe("localhost:9010", r))
 }
