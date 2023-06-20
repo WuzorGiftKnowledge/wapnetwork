@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/WuzorGiftKnowledge/prayerapp/pkg/controllers"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/controllers"
 	"github.com/gorilla/mux"
 )
 

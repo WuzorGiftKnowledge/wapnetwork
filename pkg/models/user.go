@@ -1,12 +1,12 @@
 package models
 
 import (
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/config"
-	"github.com/jinzhu/gorm"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/config"
+	
 )
 
 type User struct {
-	gorm.Model
+	Base
 	FirstName string `gorm:"" json:"firstname"`
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
@@ -20,10 +20,14 @@ func init() {
 	db.AutoMigrate(&User{})
 }
 
-func (b *User) CreateUser() *User {
+func (b *User) CreateUser()  (*User, error){
 	db.NewRecord(b)
-	db.Create(&b)
-	return b
+	err:=db.Create(&b).Error
+	return b, err
+}
+func (b *User) UpdateUser()  error{
+	err:= db.Save(&b).Error
+	return  err
 }
 
 func GetAllUsers() []User {
@@ -32,23 +36,23 @@ func GetAllUsers() []User {
 	return Users
 }
 
-func GetUserById(Id int64) (*User, *gorm.DB) {
+func GetUserById(Id int64) (*User, error) {
 	var getUser User
-	db := db.Where("ID=?", Id).Find(&getUser)
-	return &getUser, db
+	err := db.Where("ID=?", Id).Find(&getUser).Error
+	return &getUser, err
 }
-func GetUserByEmail(email string) (*User, *gorm.DB) {
+func GetUserByEmail(email string) (*User, error) {
 	var getUser User
-	db := db.Where("email=?", email).Find(&getUser)
-	return &getUser, db
+	err := db.Where("email=?", email).Find(&getUser).Error
+	return &getUser, err
 }
-func GetUserByUserName(username string) (*User, *gorm.DB) {
+func GetUserByUserName(username string) (*User, error) {
 	var getUser User
-	db := db.Where("username=?", username).Find(&getUser)
-	return &getUser, db
+	err := db.Where("username=?", username).Find(&getUser).Error
+	return &getUser, err
 }
-func DeleteUser(ID int64) User {
+func DeleteUser(ID int64) (User, error) {
 	var User User
-	db.Where("ID=?", ID).Delete(User)
-	return User
+	err:= db.Where("ID=?", ID).Delete(User).Error
+	return User, err
 }

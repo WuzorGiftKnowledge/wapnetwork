@@ -3,10 +3,12 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/auth"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/models"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/utils"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/auth"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/models"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/utils"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -19,13 +21,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("incorrect username"))
 		return
 	}
-	 if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("invalid credentials"))
 		return
 	}
 
-	accessToken, refreshToken, err := auth.GenerateJWTToken(user.Username, int64(user.ID))
+	accessToken, refreshToken, err := auth.GenerateJWTToken(user.Username,uuid.UUID(user.ID))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("error generating token " + err.Error()))
@@ -63,4 +65,3 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 
 }
-

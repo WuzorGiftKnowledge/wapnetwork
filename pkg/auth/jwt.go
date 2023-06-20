@@ -6,13 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	
+
 	"strings"
 	"time"
 
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/models"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/utils"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/models"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type Message struct {
@@ -35,7 +36,7 @@ func loginHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func GenerateJWTToken(username string, id int64) (accessToken string, rt string, err error) {
+func GenerateJWTToken(username string, id uuid.UUID) (accessToken string, rt string, err error) {
 
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
@@ -112,15 +113,15 @@ func RefreshToken(refreshToken string) (accessToken string, rt string, err error
 		claims, ok := token.Claims.(jwt.MapClaims)
 
 		if ok && claims["current_user_id"] != nil {
-			userid :=claims["current_user_id"].(float64)
-			
+			userid := claims["current_user_id"].(float64)
+
 			user, db := models.GetUserById(int64(userid))
 			if db.Error != nil {
 				err = fmt.Errorf("user not found")
 				return
 			}
 
-			return GenerateJWTToken(user.Email, int64(user.ID))
+			return GenerateJWTToken(user.Email, uuid.UUID(user.ID))
 		}
 	}
 

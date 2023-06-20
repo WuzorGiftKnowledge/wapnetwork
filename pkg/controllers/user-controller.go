@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"log"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/models"
-	"github.com/WuzorGiftKnowledge/bookapp/pkg/utils"
+
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/models"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/utils"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -45,7 +45,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	createUser := &models.User{}
 	utils.ParseBody(r, createUser)
 	ok := isUserExist(createUser.Email)
-	
 
 	if ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -65,9 +64,19 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	createUser.Username = createUser.Email
 
-	u := createUser.CreateUser()
+	u, err := createUser.CreateUser()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("error calling CreateUser:%s", err.Error())))
+		return
+	}
 	sanitizeUser(u)
-	res, _ := json.Marshal(u)
+	res, err := json.Marshal(u)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while marshalling "))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
@@ -77,11 +86,23 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	UserId := vars["UserId"]
 	ID, err := strconv.ParseInt(UserId, 0, 0)
 	if err != nil {
-		log.Println("error while parsing")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error parsing id"))
+		return
 	}
-	user := models.DeleteUser(ID)
+	user, err := models.DeleteUser(ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("error calling DeleteUser:%s", err.Error())))
+		return
+	}
 	sanitizeUser(&user)
-	res, _ := json.Marshal(user)
+	res, err := json.Marshal(user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while marshalling "))
+		return
+	}
 	w.Header().Set("Content-Type", "pkglication/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
@@ -94,9 +115,16 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	UserId := vars["UserId"]
 	ID, err := strconv.ParseInt(UserId, 0, 0)
 	if err != nil {
-		fmt.Println("error while parsing")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while parsing id "))
+		return
 	}
-	UserDetails, db := models.GetUserById(ID)
+	UserDetails, err := models.GetUserById(ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("error calling GetUserById:%s", err.Error())))
+		return
+	}
 	if updateUser.Email != "" || updateUser.Email != UserDetails.Email {
 		ok := isUserExist(updateUser.Email)
 		if ok {
@@ -112,9 +140,19 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if updateUser.LastName != "" {
 		UserDetails.LastName = updateUser.LastName
 	}
-	db.Save(&UserDetails)
+	err = UserDetails.UpdateUser()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("error calling UpdateUser:%s", err.Error())))
+		return
+	}
 	sanitizeUser(UserDetails)
-	res, _ := json.Marshal(UserDetails)
+	res, err := json.Marshal(UserDetails)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while marshalling "))
+		return
+	}
 	w.Header().Set("Content-Type", "pkglication/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)

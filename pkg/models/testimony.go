@@ -1,17 +1,18 @@
 package models
 
 import (
-	"github.com/WuzorGiftKnowledge/testimonyapp/pkg/config"
-	"github.com/jinzhu/gorm"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/config"
+	"github.com/google/uuid"
 )
 
 
 
 type Testimony struct {
-	gorm.Model
-	Name        string `gorm:"" json:"name"`
-	Author      string `json:"author"`
-	Publication string `json:"publication"`
+	Base
+	Content        string `sql:"type:text;" json:"content"`
+	ProgramID  uuid.UUID  `gorm:"type:uuid;column:program_foreign_key;not null;"`
+	IsPublished      bool `json:"isPublished"`
+	PublishedBy uuid.UUID `gorm:"type:uuid;column:user_foreign_key;not null;"`
 }
 
 func init() {
@@ -20,26 +21,34 @@ func init() {
 	db.AutoMigrate(&Testimony{})
 }
 
-func (b *Testimony) CreateTestimony() *Testimony {
+func (b *Testimony) CreateTestimony() ( *Testimony, error){
 	db.NewRecord(b)
-	db.Create(&b)
-	return b
+	err:= db.Create(&b).Error
+	return b, err
 }
 
-func GetAllTestimonys() []Testimony {
+
+func (b *Testimony) UpdateTestimony() ( *Testimony, error){
+	err:= db.Save(&b).Error
+	return b, err
+}
+func GetAllTestimonys() ([]Testimony, error) {
 	var testimonys []Testimony
-	db.Find(&testimonys)
-	return testimonys
+	err:=db.Model(&Testimony{}).Preload("Testimonies").Preload("Testimonys").Find(&testimonys).Error
+	if err !=nil{
+		return nil, err
+	}
+	return testimonys, nil
 }
 
-func GetTestimonyById(Id int64) (*Testimony, *gorm.DB) {
+func GetTestimonyById(Id int64) (*Testimony, error) {
 	var getTestimony Testimony
-	db := db.Where("ID=?", Id).Find(&getTestimony)
-	return &getTestimony, db
+	err := db.Where("ID=?", Id).Find(&getTestimony).Error
+	return &getTestimony, err
 }
 
-func DeleteTestimony(ID int64) Testimony {
+func DeleteTestimony(ID int64) (Testimony, error) {
 	var testimony Testimony
-	db.Where("ID=?", ID).Delete(testimony)
-	return testimony
+	err :=db.Where("ID=?", ID).Delete(testimony).Error
+	return testimony, err
 }

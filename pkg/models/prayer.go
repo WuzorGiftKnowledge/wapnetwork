@@ -1,17 +1,18 @@
 package models
 
 import (
-	"github.com/WuzorGiftKnowledge/prayerapp/pkg/config"
-	"github.com/jinzhu/gorm"
+	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/config"
+	"github.com/google/uuid"
 )
 
 
 
 type Prayer struct {
-	gorm.Model
-	Name        string `gorm:"" json:"name"`
-	Author      string `json:"author"`
-	Publication string `json:"publication"`
+	Base
+	PrayerPoints       string `sql:"type:text;" json:"content"`
+	ProgramID  uuid.UUID  `gorm:"type:uuid;column:prayer_foreign_key;not null;"`
+	IsPublished      bool `json:"isPublished"`
+	PublishedBy uuid.UUID `gorm:"type:uuid;column:user_foreign_key;not null;"`
 }
 
 func init() {
@@ -20,26 +21,34 @@ func init() {
 	db.AutoMigrate(&Prayer{})
 }
 
-func (b *Prayer) CreatePrayer() *Prayer {
+func (b *Prayer) CreatePrayer() ( *Prayer, error){
 	db.NewRecord(b)
-	db.Create(&b)
-	return b
+	err:= db.Create(&b).Error
+	return b, err
 }
 
-func GetAllPrayers() []Prayer {
-	var Prayers []Prayer
-	db.Find(&Prayers)
-	return Prayers
+
+func (b *Prayer) UpdatePrayer() ( *Prayer, error){
+	err:= db.Save(&b).Error
+	return b, err
+}
+func GetAllPrayers() ([]Prayer, error) {
+	var prayers []Prayer
+	err:=db.Model(&Prayer{}).Preload("Testimonies").Preload("Prayers").Find(&prayers).Error
+	if err !=nil{
+		return nil, err
+	}
+	return prayers, nil
 }
 
-func GetPrayerById(Id int64) (*Prayer, *gorm.DB) {
+func GetPrayerById(Id int64) (*Prayer, error) {
 	var getPrayer Prayer
-	db := db.Where("ID=?", Id).Find(&getPrayer)
-	return &getPrayer, db
+	err := db.Where("ID=?", Id).Find(&getPrayer).Error
+	return &getPrayer, err
 }
 
-func DeletePrayer(ID int64) Prayer {
+func DeletePrayer(ID int64) (Prayer, error) {
 	var prayer Prayer
-	db.Where("ID=?", ID).Delete(prayer)
-	return prayer
+	err :=db.Where("ID=?", ID).Delete(prayer).Error
+	return prayer, err
 }
