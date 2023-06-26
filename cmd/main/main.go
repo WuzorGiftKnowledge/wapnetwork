@@ -21,10 +21,11 @@ func main() {
 	routes.RegisterAuthRoutes(authrouter)
 
 	apirouter := r.PathPrefix("/api").Subrouter()
+	routes.RegisterProgramRoutes(apirouter)
 	routes.RegisterPrayerStoreRoutes(apirouter)
 	routes.RegisterTestimonyStoreRoutes(apirouter)
 	routes.RegisterUserRoutes(apirouter)
-	routes.RegisterProgramRoutes(apirouter)
+	
 	apirouter.Use(auth.AuthMiddleware)
 
 	http.Handle("/", r)

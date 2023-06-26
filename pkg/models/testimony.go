@@ -10,9 +10,9 @@ import (
 type Testimony struct {
 	Base
 	Content        string `sql:"type:text;" json:"content"`
-	ProgramID  uuid.UUID  `gorm:"type:uuid;column:program_foreign_key;not null;"`
+	ProgramID  uuid.UUID  `gorm:"not null" json:"programID"`
 	IsPublished      bool `json:"isPublished"`
-	PublishedBy uuid.UUID `gorm:"type:uuid;column:user_foreign_key;not null;"`
+	PublishedBy uuid.UUID `json:"publishedBy"`
 }
 
 func init() {
@@ -34,20 +34,20 @@ func (b *Testimony) UpdateTestimony() ( *Testimony, error){
 }
 func GetAllTestimonys() ([]Testimony, error) {
 	var testimonys []Testimony
-	err:=db.Model(&Testimony{}).Preload("Testimonies").Preload("Testimonys").Find(&testimonys).Error
+	err:=db.Model(&Testimony{}).Find(&testimonys).Error
 	if err !=nil{
 		return nil, err
 	}
 	return testimonys, nil
 }
 
-func GetTestimonyById(Id int64) (*Testimony, error) {
+func GetTestimonyById(Id uuid.UUID) (*Testimony, error) {
 	var getTestimony Testimony
 	err := db.Where("ID=?", Id).Find(&getTestimony).Error
 	return &getTestimony, err
 }
 
-func DeleteTestimony(ID int64) (Testimony, error) {
+func DeleteTestimony(ID uuid.UUID) (Testimony, error) {
 	var testimony Testimony
 	err :=db.Where("ID=?", ID).Delete(testimony).Error
 	return testimony, err

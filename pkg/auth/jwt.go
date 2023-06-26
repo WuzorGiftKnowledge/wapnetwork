@@ -13,13 +13,14 @@ import (
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/models"
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	"github.com/satori/go.uuid"
 )
 
 type Message struct {
 	Status string `json:"status"`
 	Info   string `json:"info"`
 }
+
 
 var secret = utils.GetEnvVariable("jwtSecretKey")
 
@@ -40,7 +41,7 @@ func GenerateJWTToken(username string, id uuid.UUID) (accessToken string, rt str
 
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(15 * time.Minute).Unix()
+	claims["exp"] = time.Now().Add(60 * time.Minute).Unix()
 	claims["authorized"] = true
 	claims["current_username"] = username
 	claims["current_user_id"] = id
@@ -86,7 +87,7 @@ func AuthMiddleware(endpointHandler http.Handler) http.Handler {
 			if token.Valid {
 				claims, ok := token.Claims.(jwt.MapClaims)
 				if ok {
-					ctx := context.WithValue(request.Context(), "props", claims)
+					ctx := context.WithValue(request.Context(), "values", models.CurrentUser{Id:uuid.FromStringOrNil(fmt.Sprint(claims["current_user_id"])), Username: fmt.Sprint(claims["current_username"]), Authorized:claims["authorized"].(bool) })
 					endpointHandler.ServeHTTP(writer, request.WithContext(ctx))
 				}
 			} else {

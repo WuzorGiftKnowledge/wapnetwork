@@ -7,12 +7,13 @@ import (
 
 type User struct {
 	Base
-	FirstName string `gorm:"" json:"firstname"`
-	LastName  string `json:"lastname"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Username  string `json:"username"`
+	FirstName string `gorm:"not null" json:"firstname"`
+	LastName  string `gorm:"not null" json:"lastname"`
+	Email     string `gorm:"unique;not null;type:varchar(100)" json:"email"`
+	Password  string `gorm:"not null" json:"password"`
+	Username  string `gorm:"unique;not null;type:varchar(100)" json:"username"`
 }
+
 
 func init() {
 	config.Connect()
@@ -56,3 +57,4 @@ func DeleteUser(ID int64) (User, error) {
 	err:= db.Where("ID=?", ID).Delete(User).Error
 	return User, err
 }
+

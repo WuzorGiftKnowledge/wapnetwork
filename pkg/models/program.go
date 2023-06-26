@@ -1,21 +1,22 @@
 package models
 
 import (
+	"time"
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/config"
-	"github.com/jinzhu/gorm"
 	"github.com/google/uuid"
+	
 )
 
 
 
 type Program struct {
 	Base
-	Name       string `json:"name"`
-	Description     string `json:"description"`
-	Date     time.Time `json:"date"`
+	Name       string `gorm:"not null" json:"name"`
+	Description     string `gorm:"" json:"description"`
+	Date     time.Time `gorm:"not null" json:"date"`
 	Testimonies []Testimony `json:"testimonies"`
 	Prayers []Prayer `json:"prayers"`
-	CreatedBy uuid.UUID `gorm:"type:uuid;column:user_foreign_key;not null;"`
+	CreatedBy uuid.UUID `gorm:"not null"`
 }
 
 func init() {
@@ -44,14 +45,14 @@ func GetAllPrograms() ([]Program, error) {
 	return programs, nil
 }
 
-func GetProgramById(Id int64) (*Program, error) {
+func GetProgramById(Id uuid.UUID) (*Program, error) {
 	var getProgram Program
 	err := db.Where("ID=?", Id).Find(&getProgram).Error
 	return &getProgram, err
 }
 
-func DeleteProgram(ID int64) (Program, error) {
+func (b *Program) DeleteProgram(ID uuid.UUID) error {
 	var program Program
-	err :=db.Where("ID=?", ID).Delete(program).Error
-	return program, err
+	err := db.Where("ID=?", ID).Delete(program).Error
+	return err
 }

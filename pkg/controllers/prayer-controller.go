@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/models"
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/utils"
 	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 )
 
 var NewPrayer models.Prayer
@@ -34,7 +34,7 @@ func GetPrayer(w http.ResponseWriter, r *http.Request) {
 func GetPrayerById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	prayerId := vars["prayerId"]
-	ID, err := strconv.ParseInt(prayerId, 0, 0)
+	ID, err := uuid.Parse(prayerId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("error while parsing id"))
@@ -55,6 +55,7 @@ func GetPrayerById(w http.ResponseWriter, r *http.Request) {
 func CreatePrayer(w http.ResponseWriter, r *http.Request) {
 	CreatePrayer := &models.Prayer{}
 	utils.ParseBody(r, CreatePrayer)
+
 	b, err := CreatePrayer.CreatePrayer()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,7 +70,7 @@ func CreatePrayer(w http.ResponseWriter, r *http.Request) {
 func DeletePrayer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	prayerId := vars["prayerId"]
-	ID, err := strconv.ParseInt(prayerId, 0, 0)
+	ID, err := uuid.Parse(prayerId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("error while parsing id"))
@@ -93,7 +94,7 @@ func UpdatePrayer(w http.ResponseWriter, r *http.Request) {
 	utils.ParseBody(r, updatePrayer)
 	vars := mux.Vars(r)
 	prayerId := vars["prayerId"]
-	ID, err := strconv.ParseInt(prayerId, 0, 0)
+	ID, err := uuid.Parse(prayerId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("error while parsing"))
@@ -105,7 +106,7 @@ func UpdatePrayer(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("error calling GetPrayer:%s",err.Error())))
 			return
 	}
-	if !prayerDetails.IsPublished {
+	if prayerDetails.IsPublished {
 		w.WriteHeader(http.StatusNotAcceptable)
 		w.Write([]byte("Can not update a published record."))
 		return
@@ -129,7 +130,7 @@ func PublishPrayer(w http.ResponseWriter, r *http.Request) {
 	utils.ParseBody(r, updatePrayer)
 	vars := mux.Vars(r)
 	prayerId := vars["prayerId"]
-	ID, err := strconv.ParseInt(prayerId, 0, 0)
+	ID, err := uuid.Parse(prayerId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("error while parsing"))
@@ -142,10 +143,21 @@ func PublishPrayer(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("error calling GetPrayerById:%s",err.Error())))
 			return
 	}
-	if prayerDetails.IsPublished != false {
-		prayerDetails.IsPublished =true
+
+	CurrentUser, ok := r.Context().Value("values").(models.CurrentUser)
+	if !ok{
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while retrieving user details from context"))
+		return
+	}
+		
+
+	if prayerDetails.IsPublished {
+		prayerDetails.IsPublished =false
 	}else{
 		prayerDetails.IsPublished =false
+		prayerDetails.IsPublished =true
+		prayerDetails.PublishedBy= uuid.UUID(CurrentUser.Id)
 	}
 
 	prayerDetails.UpdatePrayer()
