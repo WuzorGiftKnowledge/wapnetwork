@@ -1,9 +1,9 @@
 package models
 
 import (
+
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/config"
 	"github.com/google/uuid"
-	
 )
 
 type Prayer struct {
