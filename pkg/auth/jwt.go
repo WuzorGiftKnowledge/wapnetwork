@@ -116,10 +116,9 @@ func RefreshToken(refreshToken string) (accessToken string, rt string, err error
 		if ok && claims["current_user_id"] != nil {
 			userid := claims["current_user_id"].(float64)
 
-			user, db := models.GetUserById(int64(userid))
-			if db.Error != nil {
-				err = fmt.Errorf("user not found")
-				return
+			user, err := models.GetUserById(int64(userid))
+			if err != nil {
+				return "", "", fmt.Errorf("user not found %s", err)
 			}
 
 			return GenerateJWTToken(user.Email, uuid.UUID(user.ID))
