@@ -162,11 +162,11 @@ func isUserExist(emailorusername string) bool {
 
 	_, err := models.GetUserByEmail(emailorusername)
 
-	if err.Error == nil {
+	if err.Error() == "" {
 		return true
 	}
 	_, err = models.GetUserByUserName(emailorusername)
-	if err.Error == nil {
+	if err.Error() == "" {
 		return true
 
 	}

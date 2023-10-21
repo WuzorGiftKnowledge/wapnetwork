@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-
+	"fmt"
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/auth"
 	"github.com/WuzorGiftKnowledge/wapnetwork/pkg/routes"
 
@@ -16,7 +16,9 @@ func main() {
 	viper.SetConfigFile(".env")
 
 	r := mux.NewRouter()
-
+r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+ fmt.Fprintf(w, "Welcome to Wapnetwork api")
+})
 	authrouter := r.PathPrefix("/api/auth").Subrouter()
 	routes.RegisterAuthRoutes(authrouter)
 
